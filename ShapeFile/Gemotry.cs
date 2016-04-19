@@ -81,9 +81,9 @@ namespace ShapeFile
                 Multipoint multipoint = new Multipoint();
                 //multipoint.DisplayMultipoints((Multipoint[])records);
             }
-            else if (records.GetType() == typeof(Polyline[]))
+            else if (records.GetType() == typeof(Polylgon[]))
             {
-                Polyline polyline = new Polyline();
+                Polylgon polyline = new Polylgon();
                 polyline.DisplayPolylines(records);
             }
             else if (records.GetType() == typeof(Polygon[]))

@@ -110,11 +110,11 @@ namespace ShapeFile
 
 
         /// <summary>
-        /// 判断文件路径是否有效,以及路径中的文件是否有效
+        /// if the file is vaild
         /// </summary>
         /// <param name="shapeFilePath"></param>
         /// <returns></returns>
-        public bool ValidPath(string shapeFilePath)
+        public bool ISValidPath(string shapeFilePath)
         {
             string extention = System.IO.Path.GetExtension(shapeFilePath);
             string filenameNoExtension = System.IO.Path.GetFileNameWithoutExtension(shapeFilePath);
@@ -153,16 +153,15 @@ namespace ShapeFile
 
 
         /// <summary>
-        /// read shape file
+        /// read the file header
         /// </summary>
         /// <param name="pathToShapefile"></param>
         /// <returns></returns>
-        public void ReadShpFile(string pathToShapefile)
+        public int ReadShpFile(string pathToShapefile)
         {
             string filepath = System.IO.Path.HasExtension(pathToShapefile) ? pathToShapefile.Substring(0, pathToShapefile.Length - (System.IO.Path.GetExtension(pathToShapefile).Length)) : pathToShapefile;
-            string shxfilepath = filepath + ".shx";
             string shpfilepath = filepath + ".shp";
-            if (!ValidPath(pathToShapefile))
+            if (!ISValidPath(pathToShapefile))
             {
                 Console.WriteLine("Missing shapefile components at " +pathToShapefile);
             }
@@ -170,10 +169,9 @@ namespace ShapeFile
             {
                 FileStream fs = new FileStream(shpfilepath, FileMode.Open, FileAccess.Read);
                 BinaryReader binaryFile = new BinaryReader(fs);
-                //打开二进制文件  
+                //open the   binary file
                 binaryFile = new BinaryReader(fs);
-                //先读出36个字节,紧接着是Box边界合  
-                binaryFile.ReadBytes(24);
+                binaryFile.BaseStream.Seek(24, SeekOrigin.Current);
                 FileLength = binaryFile.ReadInt32();
                 Version = binaryFile.ReadInt32();
                 ShapeType = binaryFile.ReadInt32();
@@ -185,6 +183,7 @@ namespace ShapeFile
                 binaryFile.Close();
                 fs.Close();
             }
+            return ShapeType;
         }
 
         public Type GetGemotryType()
@@ -201,7 +200,7 @@ namespace ShapeFile
                     case "Multipoint":
                         return typeof(Multipoint);
                     case "PolyLine":
-                        return typeof(Polyline);
+                        return typeof(Polylgon);
                     case "Polygon":
                         return typeof(Polygon);
                     default:
@@ -214,76 +213,31 @@ namespace ShapeFile
             }
         }
 
-        public List<int> GetParts(string shpfilepath)
-        {
-            FileStream fs = new FileStream(shpfilepath, FileMode.Open, FileAccess.Read);
-            BinaryReader binaryFile = new BinaryReader(fs);
-            binaryFile.ReadBytes(144);
-            int numParts = binaryFile.ReadInt32();
-            List<int> parts = new List<int>();
-            for (int i = 0; i < numParts; i++)
-            {
-                parts.Add(binaryFile.ReadInt32()) ;
-            }
-            return parts;
-        }
-
-        public List<Point> GetPoints(string shpfilepath)
-        {
-            FileStream fs = new FileStream(shpfilepath, FileMode.Open, FileAccess.Read);
-            BinaryReader binaryFile = new BinaryReader(fs);
-            binaryFile.ReadBytes(148);
-            int numPoints = binaryFile.ReadInt32();
-            List<Point> points = new List<Point>() ;
-            for (int i = 0; i < numPoints; i++)
-            {
-                Point tempoint = new Point();
-                tempoint.X = binaryFile.ReadDouble();
-                tempoint.Y = binaryFile.ReadDouble();
-                points.Add(tempoint);
-            }
-            return points;
-        }
-
         public object[] CollectionGemotry(string shpfilepath)
         {
-            var geometryType = Enum.GetName(typeof(ShapeTypes), ShapeType);
-            FileStream fs = new FileStream(shpfilepath, FileMode.Open, FileAccess.Read);
-            BinaryReader binaryFile = new BinaryReader(fs);
-            binaryFile.ReadBytes(100);
+            int shapetype = ReadShpFile(shpfilepath);
+            var geometryType = Enum.GetName(typeof(ShapeTypes), shapetype);
             switch (geometryType)
             {
-                //case "Point":
-                    //List<Point> points = new List<Point>();
-                    /*for (int i = 0; i < ShapeCount; i++)
-                    {
-                        Point point = new Point();
-                        //记录头8个字节和一个int(4个字节)的shapetype
-                        binaryFile.ReadBytes(12);
-                        point.X = binaryFile.ReadDouble();
-                        point.Y = binaryFile.ReadDouble();
-                        points.Add(point);
-                    }
-                    return records;*/
+                case "Point":
+                    Point points = new Point();
+                    return points.CollectPoint(shpfilepath);
                 case "PolyLine":
-                    List<Polyline> polylines = new List<Polyline>();
-                    MainRecord mainrecord = new MainRecord();
-                    for(int i=0;i<mainrecord.GetNumRecords(shpfilepath);i++)
-                    {
-                        binaryFile.ReadBytes(44);
-                        Polyline polyline = new Polyline();
-                        polyline.Parts = GetParts(shpfilepath);
-                        polyline.Points = GetPoints(shpfilepath);
-                        polylines.Add(polyline);
-                    }
-                    Polyline[] aa = new Polyline[polylines.Count];
-                    polylines.CopyTo(aa);
-                    return aa;
+                    Polylgon polylines = new Polylgon();
+                    return polylines.CollectPolyline(shpfilepath);
+                case "Polygone":
+                    Polygon polygon = new Polygon();
+                    return polygon.CollectPolygon(shpfilepath);
                 case "Null":
                     return null;
                 default:
                     throw new Exception("Unknown geometry type \"" + geometryType + "\" provided for shapefile  " );
             }
+        }
+
+        public void CombineFile()
+        {
+
         }
 
     }

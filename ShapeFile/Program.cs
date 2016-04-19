@@ -11,10 +11,10 @@ namespace ShapeFile
         static void Main(string[] args)
         {
             ShapeFile shapefile = new ShapeFile();
-            shapefile.ReadShpFile(@"E:\Project\Shape\lower.shp");
-            var geometry = shapefile.CollectionGemotry(@"E:\Project\Shape\lower.shp");
+            var geometry = shapefile.CollectionGemotry(@"C:\Users\alinawang\Desktop\testData\lower.shp");
             Gemotry geomotry1 = new Gemotry();
             geomotry1.DisplayGeometryRecords(geometry);
+            
             Console.ReadLine();
         }
     }
