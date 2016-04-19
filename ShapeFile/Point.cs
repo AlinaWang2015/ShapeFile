@@ -46,34 +46,7 @@ namespace ShapeFile
             this.x = x;
             this.y = y;
         }
-
-        public Point CreatePoint(double x, double y)
-        {
-            return new Point(x, y);
-        }
-
-        public Point CreatePoint(byte[] buffer)
-        {
-            if (buffer.Length >= 20)
-            {
-                return new Point(BitConverter.ToDouble(buffer, 4), BitConverter.ToDouble(buffer, 12));
-            }
-            else
-            {
-                throw new ArgumentException("Byte buffer was an invalid size to create a point shape. Buffer size provided was " + buffer.Length.ToString());
-            }
-        }
-
-        public Point[] RecordsToPointGeometry(List<MainRecord> records)
-        {
-            Point[] points = new Point[records.Count];
-            for (int i = 0; i < records.Count; i++)
-            {
-                points[i] = new Point(BitConverter.ToDouble(records[i].RecordContents, 4), BitConverter.ToDouble(records[i].RecordContents, 12));
-            }
-            return points;
-        }
-
+        
         public Point[] CollectPoint(string pathToShapefile)
         {
             string filepath = System.IO.Path.HasExtension(pathToShapefile) ? pathToShapefile.Substring(0, pathToShapefile.Length - (System.IO.Path.GetExtension(pathToShapefile).Length)) : pathToShapefile;
